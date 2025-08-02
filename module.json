@@ -35,7 +35,7 @@
       "flags": {}
     }
   ],
-  "url":"",
-  "manifest": "",
-  "download":""
+  "url":"https://github.com/RPG-DOS-MANOS/rpgdosmanos_system",
+  "manifest": "https://raw.githubusercontent.com/RPG-DOS-MANOS/rpgdosmanos_system/refs/heads/main/module.json",
+  "download":"https://github.com/RPG-DOS-MANOS/rpgdosmanos_system/archive/refs/heads/main.zip"
 }
