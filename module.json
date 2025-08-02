@@ -2,7 +2,7 @@
   "id": "rpgdosmanos_system",
   "title": "RPG DOS MANOS - SISTEMA",
   "description": "Compendium do Sistema do RPG DOS MANOS",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "compatibility": {
     "minimum": "11",
     "verified": "12"
@@ -21,7 +21,8 @@
     
   ],
   "scripts": [
-    "scripts/main.js"
+  "https://unpkg.com/@discord/embedded-app-sdk@1/dist/embedded-app-sdk.js",
+  "scripts/main.js"
   ],
   "packs": [
    

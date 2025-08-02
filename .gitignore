@@ -1,2 +1,3 @@
 *.jfm
 *LOCK
+/node_modules
