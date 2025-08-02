@@ -1,113 +1,75 @@
 /**
- * RPG dos Manos - Discord SDK Integration
+ * RPG dos Manos - Discord SDK Integration (Versão Pre-World)
  *
- * INSTRUÇÕES:
- * 1. Cole este código no arquivo JavaScript principal do seu módulo/sistema.
- * 2. Certifique-se de que o Discord Embedded App SDK está sendo importado corretamente no seu projeto.
- * Normalmente, você faria isso no topo do seu arquivo:
- * import { DiscordSDK } from "@discord/embedded-app-sdk";
- *
- * O QUE ESTE CÓDIGO FAZ:
- * - Registra uma configuração no menu do Foundry para que você possa inserir seu "Client ID" do Discord.
- * - Cria uma função para inicializar o SDK do Discord.
- * - Tenta inicializar o SDK assim que o Foundry está pronto ("ready" hook).
- * - Re-inicializa o SDK automaticamente se você alterar o Client ID nas configurações.
- * - Fornece logs e notificações para facilitar a depuração.
+ * ATENÇÃO: Para este código funcionar, você DEVE editar a linha abaixo
+ * e inserir o seu Client ID diretamente no arquivo.
  */
+const CLIENT_ID = "1401000620814503946"; // <-- COLE SEU CLIENT ID AQUI
 
-// Variável global para manter a instância do SDK.
-// É importante mantê-la fora dos hooks para que possa ser acessada de qualquer lugar.
-let discordSdk = null;
+/**
+ * Verifica se a aplicação está a correr dentro de um iframe, como no cliente Discord.
+ * @returns {boolean}
+ */
+function isInsideDiscord() {
+  return window.self !== window.top;
+}
 
 /**
  * Função principal para configurar e inicializar o Discord SDK.
- * Esta função pode ser chamada a qualquer momento para tentar (re)iniciar a conexão.
+ * Agora usa o CLIENT_ID definido no topo do arquivo.
  */
 async function setupDiscordSdk() {
-  // 1. Pega o Client ID das configurações do Foundry.
-  const clientId = game.settings.get("rpgdosmanos_system", "discord-client-id");
-
-  // 2. Verifica se o Client ID foi preenchido. Se não, avisa o usuário e para a execução.
-  if (!clientId) {
-    console.log("RPG dos Manos | Discord Client ID não configurado. A inicialização do SDK foi abortada.");
-    // Opcional: notificar o GM na interface.
-    if (game.user.isGM) {
-        ui.notifications.warn("Para integrar com o Discord, por favor, insira o Client ID da sua aplicação nas configurações do sistema.");
-    }
+  // 1. Verifica se o Client ID foi preenchido no arquivo.
+  if (!CLIENT_ID || CLIENT_ID === "1401000620814503946") {
+    console.error("RPG dos Manos | O Client ID do Discord não foi definido no arquivo main.js!");
+    // Opcional: Adicionar um aviso visual, se possível nesta fase.
     return;
   }
 
-  // 3. Se já existir uma instância antiga do SDK, é uma boa prática tentar "fechá-la" antes de criar uma nova.
-  // A SDK atual não tem um método `close()` explícito, então apenas criar uma nova instância sobre a antiga é suficiente.
-  // No futuro, se um método de limpeza for adicionado, ele iria aqui.
-
   try {
-    console.log(`RPG dos Manos | Tentando inicializar o Discord SDK com o Client ID: ${clientId}`);
+    console.log(`RPG dos Manos | Tentando inicializar o Discord SDK com o Client ID: ${CLIENT_ID}`);
 
-    // 4. **PONTO CRÍTICO DA CORREÇÃO:** Instancia o SDK usando o `clientId`, e não um token.
-    discordSdk = new DiscordSDK(clientId);
+    // 2. Instancia o SDK.
+    const discordSdk = new DiscordSDK(CLIENT_ID);
 
-    // 5. Aguarda o SDK estabelecer a comunicação com o cliente Discord.
-    // Isso confirma que seu jogo está rodando dentro de uma Atividade do Discord.
-    await discordSdk.ready();
+    // 3. Aguarda o SDK estabelecer a comunicação, com um timeout de 8 segundos.
+    await Promise.race([
+        discordSdk.ready(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout: A conexão com o SDK do Discord demorou demasiado.")), 8000))
+    ]);
 
     console.log("RPG dos Manos | Discord SDK está pronto e conectado ao cliente Discord.");
-    if (game.user.isGM) {
-        ui.notifications.info("SDK do Discord conectado com sucesso!");
-    }
 
-    // --- PRÓXIMOS PASSOS (AUTENTICAÇÃO) ---
-    // A partir daqui, você precisaria autenticar o usuário para obter informações dele.
-    // Isso envolve um fluxo OAuth2 que requer um backend (servidor) para ser feito de forma segura.
-    // O código abaixo é um exemplo do que você faria a seguir, mas requer um servidor que você mesmo precisa criar.
+    // A partir daqui, você pode usar o 'discordSdk' para outras operações, como autenticação.
+    // Exemplo:
     /*
     const { code } = await discordSdk.commands.authorize({
-      client_id: clientId,
+      client_id: CLIENT_ID,
       response_type: "code",
       state: "",
       prompt: "none",
       scope: ["identify", "guilds"],
     });
-
-    // Você enviaria este 'code' para o seu servidor.
-    // Seu servidor então o trocaria por um 'access_token' junto à API do Discord.
-    // E então você usaria o token para autenticar.
-    const { access_token } = await fetch(`https://meuservidor.com/api/token?code=${code}`).then(res => res.json());
-
-    await discordSdk.commands.authenticate({ access_token });
+    // ... etc
     */
-
 
   } catch (error) {
     console.error("RPG dos Manos | Falha ao configurar o Discord SDK. Verifique os erros abaixo.");
     console.error(error);
-    if (game.user.isGM) {
-        ui.notifications.error("Falha ao conectar com o SDK do Discord. Verifique o Client ID e o console (F12).");
-    }
-    // Limpa a instância em caso de falha.
-    discordSdk = null;
   }
 }
 
-// Hook do Foundry VTT que executa uma única vez quando o jogo está completamente carregado.
-// É o local ideal para registrar configurações e fazer a primeira inicialização.
-Hooks.once("ready", () => {
-  // Registra a configuração no banco de dados do Foundry.
-  game.settings.register("rpgdosmanos_system", "discord-client-id", {
-    name: "Discord Application Client ID", // Nome mais claro
-    hint: "Insira o Client ID da sua aplicação encontrada no Portal de Desenvolvedores do Discord. Não é um token.", // Hint mais claro
-    scope: "world",  // 'world' significa que a configuração é a mesma para todos no mesmo mundo.
-    config: true,    // 'true' para que apareça no menu de configurações.
-    type: String,
-    default: "",
-    // A função 'onChange' é chamada sempre que o valor desta configuração é alterado.
-    onChange: value => {
-      console.log(`RPG dos Manos | O Client ID do Discord foi alterado. Reiniciando o SDK...`);
-      // Chama a função de setup novamente para usar o novo ID.
-      setupDiscordSdk();
-    }
-  });
-
-  // Tenta fazer a configuração inicial assim que o jogo carrega.
-  setupDiscordSdk();
+/**
+ * Hook do Foundry VTT que executa assim que o código base do Foundry é inicializado,
+ * antes mesmo da tela de seleção de mundo aparecer.
+ * Este é o local correto para código que precisa rodar fora de um mundo.
+ */
+Hooks.once("init", () => {
+  // Verifica se estamos dentro do Discord antes de tentar qualquer coisa.
+  if (isInsideDiscord()) {
+    console.log("RPG dos Manos | Aplicação a correr dentro do Discord. A iniciar o SDK...");
+    setupDiscordSdk();
+  } else {
+    console.log("RPG dos Manos | Aplicação a correr fora do Discord. O SDK não será iniciado.");
+  }
 });
