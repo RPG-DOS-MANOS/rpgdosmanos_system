@@ -1,0 +1,41 @@
+{
+  "id": "rpgdosmanos_system",
+  "title": "RPG DOS MANOS - SISTEMA",
+  "description": "Compendium do Sistema do RPG DOS MANOS",
+  "version": "0.1.0",
+  "compatibility": {
+    "minimum": "11",
+    "verified": "12"
+  },
+  "relationships": {
+   
+  },
+  "authors": [
+    {
+      "name": "Ariel",
+      "email": "rpdosmanos@gmail.com",
+      "discord": "japaping"
+    }
+  ],
+  "styles": [
+    
+  ],
+  "scripts": [
+    "scripts/main.js"
+  ],
+  "packs": [
+   
+  ],
+  "media": [
+    {
+      "type": "setup",
+      "url": "modules/rpgdosmanos_system/media/banner.jpg",
+      "thumbnail": "modules/rpgdosmanos_system/media/banner.jpg",
+      "loop": false,
+      "flags": {}
+    }
+  ],
+  "url":"",
+  "manifest": "",
+  "download":""
+}
