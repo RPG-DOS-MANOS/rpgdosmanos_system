@@ -1,1 +1,2 @@
-import "./discord.js"
+import "config.js"
+
